@@ -1,0 +1,211 @@
+---
+title: "Data 624 - HW 1"
+author: "Coco Donovan"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading Necessary Packages:
+
+```{r}
+library(fpp2)
+library(forecast)
+library(ggplot2)
+```
+
+### HA - 2.1
+
+Use the help function to explore what the series gold, woolyrnq and gas represent.
+
+Use autoplot() to plot each of these in separate plots.
+What is the frequency of each series? Hint: apply the frequency() function.
+Use which.max() to spot the outlier in the gold series. Which observation was it?
+
+#### autoplot()
+
+```{r}
+autoplot(gold)
+autoplot(woolyrnq)
+autoplot(gas)
+```
+
+#### frequency()
+
+```{r}
+frequency(gold)
+frequency(woolyrnq)
+frequency(gas)
+```
+
+The frequencies of the referenced time series are as follows:
+$\\$
+- gold: 1
+$\\$
+- woolyrnq: 4
+$\\$
+- gas: 12
+
+### HA - 2.3
+
+#### a.
+
+```{r}
+retaildata <- readxl::read_excel("retail.xlsx", skip=1)
+```
+
+#### b.
+
+```{r}
+myts <- ts(retaildata[,"A3349338X"],
+  frequency=12, start=c(1982,4))
+```
+
+#### c.
+
+```{r}
+autoplot(myts)
+```
+
+When looking at the autoplot(), it seems that the retail data has a general increasing
+trend since the beginning of data being recorded. From this plot and my untrained eyes,
+it is unclear whether there is a cyclical pattern present (although, I would lean 
+towards saying there is no cyclical nature to this data).
+
+```{r}
+ggseasonplot(myts)
+```
+
+When looking at the seasonal plot, it is clear that there are some seasonality 
+that occurs with A3349338X. For example, there is typically an increase that occurs
+from November to December, and a decrease from January to February.
+
+```{r}
+ggsubseriesplot(myts)
+```
+
+These observations concerning seasonality are confirmed when I look at the subseries 
+plot. There are more subtle fluctuations month to month, and the first observations I 
+presented are more pronounced.
+
+```{r}
+gglagplot(myts)
+ggAcf(myts)
+```
+
+### HA - 6.2
+
+The plastics data set consists of the monthly sales (in thousands) of product A for a plastics manufacturer for five years.
+
+#### a.
+
+Plot the time series of sales of product A. Can you identify seasonal fluctuations and/or a trend-cycle?
+
+```{r}
+autoplot(plastics)
+```
+
+From the basic autoplot() of the plastics data, it seems that product A experiences 
+significant seasonality in terms of sales figures. There seems to be steep increase
+from a little bit in the calendar year. This increase stops a little after the middle 
+of the calendar year and is then followed by a steep decrease until a little bit into
+the next calendar year. In addition to a very transparent view of seasonality, there
+also seems to be an overall trend of increasing sales figures year over year (for 
+the five years of data).
+
+```{r}
+ggseasonplot(plastics)
+ggsubseriesplot(plastics)
+```
+
+This observation about seasonality is confirmed when using the ggseasonplot() and 
+the ggsubseriesplot() functions.
+
+#### b.
+
+Use a classical multiplicative decomposition to calculate the trend-cycle and seasonal indices.
+
+```{r}
+decomp <- plastics %>% decompose(type="multiplicative")
+
+decomp %>% autoplot()
+```
+
+#### c.
+
+Do the results support the graphical interpretation from part a?
+$\\$
+$\\$
+Answer:
+$\\$
+$\\$
+Yes, the classical decomposition supports the answer from part a. The same seasonality
+that was discussed during part a is present in our seasonal plot and the same general 
+increasing trend is displayed in the "trend" plot.
+
+#### d.
+
+Compute and plot the seasonally adjusted data.
+
+```{r}
+autoplot(plastics, series="Data") +
+  autolayer(seasadj(decomp), series="Seasonally Adjusted")
+```
+
+#### e.
+
+Change one observation to be an outlier (e.g., add 500 to one observation), and recompute the seasonally adjusted data. What is the effect of the outlier?
+
+```{r}
+# Beginning
+
+plastics_beginning = plastics
+
+plastics_beginning[10] = plastics_beginning[10] + 500
+
+decomp_w_beginning_outlier <- plastics_beginning %>% decompose(type="multiplicative")
+
+autoplot(plastics_beginning, series="Data") +
+  autolayer(seasadj(decomp_w_beginning_outlier), series="Seasonally Adjusted")
+```
+
+#### f.
+
+Does it make any difference if the outlier is near the end rather than in the middle of the time series?
+
+Middle:
+
+```{r}
+# Middle
+
+plastics_middle = plastics
+
+plastics_middle[30] = plastics_middle[30] + 500
+
+decomp_w_middle_outlier <- plastics_middle %>% decompose(type="multiplicative")
+
+autoplot(plastics_middle, series="Data") +
+  autolayer(seasadj(decomp_w_middle_outlier), series="Seasonally Adjusted")
+```
+
+End:
+
+```{r}
+# End
+
+plastics_end = plastics
+
+plastics_end[50] = plastics_end[50] + 500
+
+decomp_w_end_outlier <- plastics_end %>% decompose(type="multiplicative")
+
+autoplot(plastics, series="Data") +
+  autolayer(seasadj(decomp_w_end_outlier), series="Seasonally Adjusted")
+```
+
+
